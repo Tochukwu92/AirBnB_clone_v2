@@ -1,13 +1,12 @@
 #!/usr/bin/python3
-"""
-Fabric script based on the file 2-do_deploy_web_static.py that creates and
-distributes an archive to the web servers
-"""
+# Fabfile to distribute an archive to a web servers
 
-from fabric.api import env, local, put, run
+import os
 from datetime import datetime
 from os.path import exists, isdir
-env.hosts = ['35.173.35.145', '44.200.109.147']
+from fabric.api import env, local, put, run
+
+env.hosts = ["52.205.92.184", "34.227.94.236"]
 
 
 def do_pack():
@@ -15,7 +14,7 @@ def do_pack():
     try:
         date = datetime.now().strftime("%Y%m%d%H%M%S")
         if isdir("versions") is False:
-            local("mkdir versions")
+            local("mkdir -p versions")
         file_name = "versions/web_static_{}.tgz".format(date)
         local("tar -cvzf {} web_static".format(file_name))
         return file_name
@@ -24,17 +23,24 @@ def do_pack():
 
 
 def do_deploy(archive_path):
-    """distributes an archive to the web servers"""
-    if exists(archive_path) is False:
+    """Distributes an archive to a web server.
+    Args:
+        archive_path (str): The path of the archive to distribute.
+    Returns:
+        If the file doesn't exist at archive_path or an error occurs - False.
+        Otherwise - True.
+    """
+    if os.path.isfile(archive_path) is False:
         return False
+
     try:
-        file_n = archive_path.split("/")[-1]
-        no_ext = file_n.split(".")[0]
+        file_name = archive_path.split("/")[-1]
+        no_ext = file_name.split(".")[0]
         path = "/data/web_static/releases/"
         put(archive_path, '/tmp/')
         run('mkdir -p {}{}/'.format(path, no_ext))
-        run('tar -xzf /tmp/{} -C {}{}/'.format(file_n, path, no_ext))
-        run('rm /tmp/{}'.format(file_n))
+        run('tar -xzf /tmp/{} -C {}{}/'.format(file_name, path, no_ext))
+        run('rm /tmp/{}'.format(file_name))
         run('mv {0}{1}/web_static/* {0}{1}/'.format(path, no_ext))
         run('rm -rf {}{}/web_static'.format(path, no_ext))
         run('rm -rf /data/web_static/current')

@@ -7,6 +7,7 @@ folder of the AirBnB Clone repo
 from datetime import datetime
 from fabric.api import local
 from os.path import isdir
+import os
 
 
 def do_pack():
@@ -14,9 +15,11 @@ def do_pack():
     try:
         date = datetime.now().strftime("%Y%m%d%H%M%S")
         if isdir("versions") is False:
-            local("mkdir versions")
-        file_name = "versions/web_static_{}.tgz".format(date)
-        local("tar -cvzf {} web_static".format(file_name))
-        return file_name
+            local("mkdir -p versions")
+        archived_file = "versions/web_static_{}.tgz".format(date)
+        local("tar -cvzf {} web_static".format(archived_file))
+        file_size = os.path.getsize(archived_file)
+        print('web_static packed: {} -> {}Bytes'.format(archived_file, file_size))
+        return archived_file
     except:
         return None
